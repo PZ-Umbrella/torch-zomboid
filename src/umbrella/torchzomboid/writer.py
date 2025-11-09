@@ -19,24 +19,24 @@ from .exposer import KahluaExposer, VisibilityLevel, KahluaClass
 
 KAHLUA_TYPE_MAP = {
     "boolean": "boolean",
-    "Boolean": "boolean",
+    "java/lang/Boolean": "boolean",
     "void": "null",
 
     "byte": "integer",
-    "Byte": "integer",
+    "java/lang/Byte": "integer",
     "char": "integer",
-    "Char": "integer",
+    "java/lang/Char": "integer",
     "short": "integer",
-    "Short": "integer",
+    "java/lang/Short": "integer",
     "int": "integer",
-    "Integer": "integer",
+    "java/lang/Integer": "integer",
     "long": "integer",
-    "Long": "integer",
+    "java/lang/Long": "integer",
 
     "float": "number",
-    "Float": "number",
+    "java/lang/Float": "number",
     "double": "number",
-    "Double": "number",
+    "java/lang/Double": "number",
 
     "java/lang/String": "string",
     "java/lang/Object": "any",
