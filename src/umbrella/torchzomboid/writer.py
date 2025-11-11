@@ -4,17 +4,12 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 
 from albion.torch import Torch, TypeReference
-from albion.torch.types import Class
+from albion.torch.types import Class, AccessModifier
 from albion.torch.emmylua import LuaComment
 from albion.torch.emmylua.writer import EmmyWriter
 from albion.torch.emmylua.class_writer import EmmyClassWriter
 
 from .exposer import KahluaExposer, VisibilityLevel, KahluaClass
-
-# TODO: simulate:
-#  LuaManager.exposeKeyboardKeys(LuaManager.env);
-#  LuaManager.exposeMouseButtons(LuaManager.env);
-#  LuaManager.exposeLuaCalendar();
 
 
 KAHLUA_TYPE_MAP = {
@@ -132,6 +127,25 @@ def write_kahlua_file(path: Path) -> None:
                    "__classmetatables = {}\n")
 
 
+def write_calendar_file(path: Path, torch: Torch) -> None:
+    calendar = torch.get_class("java/util/Calendar")
+
+    if calendar is None:
+        print("Cannot expose Calendar because java/util/Calendar is not known.")
+        return
+
+    with path.open("w", encoding="utf-8") as file:
+        file.write("---@meta _\n\n")
+
+        for field in calendar.fields.values():
+            # TODO: should check if final, but we don't store this currently
+            if field.static and field.access_modifier is AccessModifier.PUBLIC \
+                    and field.type.basic == "int" and field.type.array_dimensions == 0:
+                file.write(f"---@type integer\nPZCalendar.{field.name} = nil\n\n")
+
+        file.write("Calendar = PZCalendar\n")
+
+
 @dataclass
 class PackageCache:
     name: str
@@ -207,3 +221,5 @@ def write_all(torch: Torch, path: Path, exposed_classes: Iterable[Class], expose
 
                 for clazz in sorted(package.visible_classes, key=attrgetter("name")):
                     file.write("\n" + write_class(clazz, writer))
+
+    write_calendar_file(path / "__Calendar.lua", torch)
