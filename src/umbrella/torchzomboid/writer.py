@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from albion.torch import Torch, TypeReference
 from albion.torch.types import Class, AccessModifier
 from albion.torch.emmylua import LuaComment
-from albion.torch.emmylua.writer import EmmyWriter
+from albion.torch.emmylua.writer import EmmyWriter, RESERVED_TYPE_NAMES
 from albion.torch.emmylua.class_writer import EmmyClassWriter
 
 from .exposer import KahluaExposer, VisibilityLevel, KahluaClass
@@ -201,7 +201,12 @@ def write_all(torch: Torch, path: Path, exposed_classes: Iterable[Class], expose
                 package.exposed_subclasses.append(clazz)
             case VisibilityLevel.VISIBLE:
                 package.visible_classes.append(clazz)
-        writer.lua_name_map[clazz.clazz.name] = clazz.name
+        if clazz.name not in RESERVED_TYPE_NAMES:
+            writer.lua_name_map[clazz.clazz.name] = clazz.name
+        else:
+            name = clazz.clazz.name.replace("/", ".").replace("$", ".")
+            assert name not in RESERVED_TYPE_NAMES
+            writer.lua_name_map[clazz.clazz.name] = name
 
     write_globals(exposed_globals, path / "__global.lua", writer)
 
