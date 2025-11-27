@@ -7,18 +7,7 @@ from albion.torch import Torch
 from albion.torch.types import Class, TypeReference, Method
 from albion.torch.util import OrderedEnum
 
-
-PRIMITIVE_TYPES = {
-    "boolean",
-    "byte",
-    "char",
-    "short",
-    "int",
-    "long",
-    "float",
-    "double",
-    "void"
-}
+from umbrella.torchzomboid import KAHLUA_METHOD_ANNOTATION
 
 
 class VisibilityLevel(OrderedEnum):
@@ -42,7 +31,7 @@ class KahluaClass:
 
 
 def is_global_method(method: Method) -> bool:
-    annotation = method.get_annotation("se/krka/kahlua/integration/annotations/LuaMethod")
+    annotation = method.get_annotation(KAHLUA_METHOD_ANNOTATION)
     if annotation is not None:
         return annotation.arguments.get("global", False)
 

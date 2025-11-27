@@ -10,6 +10,7 @@ from albion.torch.emmylua.writer import EmmyWriter, RESERVED_TYPE_NAMES
 from albion.torch.emmylua.class_writer import EmmyClassWriter
 
 from .exposer import KahluaExposer, VisibilityLevel, KahluaClass
+from umbrella.torchzomboid import KAHLUA_METHOD_ANNOTATION
 
 
 KAHLUA_TYPE_MAP = {
@@ -99,7 +100,7 @@ def write_globals(classes: Iterable[Class], path: Path, writer: KahluaWriter) ->
         file.write("---@meta _\n\n")
         for clazz in sorted(classes, key=attrgetter("name")):
             for method in sorted(clazz.get_all_methods(), key=attrgetter("name")):
-                annotation = method.get_annotation("se/krka/kahlua/integration/annotations/LuaMethod")
+                annotation = method.get_annotation(KAHLUA_METHOD_ANNOTATION)
                 if annotation is None or not annotation.arguments.get("global", False):
                     continue
 
