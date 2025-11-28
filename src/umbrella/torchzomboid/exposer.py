@@ -7,11 +7,11 @@ from albion.torch import Torch
 from albion.torch.types import Class, TypeReference, Method
 from albion.torch.util import OrderedEnum
 
-from umbrella.torchzomboid import KAHLUA_METHOD_ANNOTATION
+from umbrella.torchzomboid import KAHLUA_METHOD_ANNOTATION, get_enclosing_classes
 
 
 class VisibilityLevel(OrderedEnum):
-    NONE = enum.auto()
+    INVISIBLE = enum.auto()
     """Not visible at all."""
     VISIBLE = enum.auto()
     """
@@ -28,6 +28,7 @@ class KahluaClass:
     clazz: Class
     name: str
     visibility_level: "VisibilityLevel"
+    has_class_table: bool
 
 
 def is_global_method(method: Method) -> bool:
@@ -39,6 +40,9 @@ def is_global_method(method: Method) -> bool:
 
 
 class KahluaExposer:
+    """
+    Simulates how Kahlua's Exposer represents Java classes in Lua.
+    """
     def __init__(self, torch: Torch) -> None:
         self.torch: Torch = torch
         self.classes: dict[str, KahluaClass] = {}
@@ -56,16 +60,23 @@ class KahluaExposer:
 
     def add_class(self, clazz: Class, visibility_level: VisibilityLevel) -> KahluaClass:
         if clazz.name in self.classes:
-            cached_class = self.classes[clazz.name]
-            assert cached_class.clazz == clazz, "tried to register two different classes with the same name"
-            if visibility_level > cached_class.visibility_level:
-                cached_class.visibility_level = visibility_level
+            existing_class = self.classes[clazz.name]
+            assert existing_class.clazz is clazz, "tried to register two different classes with the same name"
+            if visibility_level > existing_class.visibility_level:
+                existing_class.visibility_level = visibility_level
+                if visibility_level is VisibilityLevel.EXPOSED:
+                    existing_class.has_class_table = True
 
-            return cached_class
+            return existing_class
 
         name = self.get_valid_name(clazz)
 
-        kahlua_class = KahluaClass(clazz, name, visibility_level)
+        kahlua_class = KahluaClass(
+            clazz,
+            name,
+            visibility_level,
+            visibility_level is VisibilityLevel.EXPOSED
+        )
         self.classes[clazz.name] = kahlua_class
 
         return kahlua_class
@@ -128,22 +139,22 @@ class KahluaExposer:
 
     def expose_all_visible(self) -> None:
         for clazz in list(self.classes.values()):
-            clazz_object = clazz.clazz
+            torch_class = clazz.clazz
 
-            for _super in clazz_object.get_all_supertypes():
+            for _super in torch_class.get_all_supertypes():
                 self.expose_referenced_types(_super)
 
             if not clazz.visibility_level >= VisibilityLevel.EXPOSED_SUBCLASS:
                 continue
 
-            for field in clazz_object.fields.values():
+            for field in torch_class.fields.values():
                 self.expose_referenced_types(field.type)
 
-            for cluster in clazz_object.methods.values():
+            for cluster in torch_class.methods.values():
                 for method in cluster.methods:
                     self.expose_visible_to_method(method)
 
-            for constructor in clazz_object.constructors:
+            for constructor in torch_class.constructors:
                 for parameter in constructor.parameters:
                     self.expose_referenced_types(parameter)
 
@@ -151,12 +162,22 @@ class KahluaExposer:
                     for bound in parameter.bounds:
                         self.expose_referenced_types(bound)
 
+            self.expose_enclosing_classes(torch_class)
+
     def expose_visible_to_globals(self, clazz: Class) -> None:
         for method in clazz.get_all_methods():
             if not is_global_method(method):
                 continue
 
             self.expose_visible_to_method(method)
+
+    def expose_enclosing_classes(self, clazz: Class) -> None:
+        for enclosing_class_name in get_enclosing_classes(clazz.name):
+            enclosing_class = self.torch.get_class(enclosing_class_name)
+            if enclosing_class is not None:
+                self.add_class(enclosing_class, VisibilityLevel.INVISIBLE)
+            else:
+                print(f"KahluaExposer: could not find enclosing class {enclosing_class_name} of {clazz.name}")
 
     def expose(self, exposed: Iterable[Class]) -> None:
         for clazz in exposed:

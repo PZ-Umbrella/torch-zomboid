@@ -8,6 +8,7 @@ from collections.abc import Iterable
 
 from albion.torch import Torch, Class
 from albion.torch.filesystem import FileSystem
+from umbrella.torchzomboid import get_enclosing_classes
 from umbrella.torchzomboid.discovery import ExposedClassDiscoverer
 from albion.torch.rosetta.reader import load_dir_recurse
 from albion.torch.rosetta.applicator import apply_rosetta
@@ -124,19 +125,24 @@ def main() -> None:
 
     filesystem = FileSystem(get_jdk_paths(game_path, args.jdk) + get_game_classpath(game_path))
 
+    print("Discovering types...")
+
     exposed = ExposedClassDiscoverer.get_exposed_classes_recurse(
         filesystem,
         "zombie/lua/LuaManager.Exposer", "exposeAll"
     )
 
-    torch = Torch(filesystem)
+    enclosing_classes: set[str] = set()
+    for clazz in exposed.classes:
+        enclosing_classes.update(get_enclosing_classes(clazz))
 
     print("Building type information...")
 
+    torch = Torch(filesystem)
+
     # needed for the lua renderer
     torch.add_class_by_name_recurse("java/lang/Class")
-
-    torch.add_classes_by_name_recurse(exposed.classes | exposed.globals_classes)
+    torch.add_classes_by_name_recurse(exposed.classes | exposed.globals_classes | enclosing_classes)
 
     rosetta_path: Path = args.rosetta
     if rosetta_path is not None and rosetta_path.is_dir():
