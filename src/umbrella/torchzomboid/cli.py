@@ -129,7 +129,7 @@ def main() -> None:
 
     exposed = ExposedClassDiscoverer.get_exposed_classes_recurse(
         filesystem,
-        "zombie/lua/LuaManager.Exposer", "exposeAll"
+        "zombie/Lua/LuaManager.Exposer", "exposeAll"
     )
 
     enclosing_classes: set[str] = set()
