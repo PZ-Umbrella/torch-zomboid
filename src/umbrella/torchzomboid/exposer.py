@@ -4,7 +4,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 
 from albion.torch import Torch
-from albion.torch.types import Class, TypeReference, Method
+from albion.torch.types import Class, TypeReference, Method, PRIMITIVE_TYPE_NAMES
 from albion.torch.util import OrderedEnum
 
 from umbrella.torchzomboid import KAHLUA_METHOD_ANNOTATION, get_enclosing_classes
@@ -92,7 +92,7 @@ class KahluaExposer:
         if _type.is_type_variable:
             return
 
-        if _type.basic not in self.classes and _type.basic not in PRIMITIVE_TYPES:
+        if _type.basic not in self.classes and _type.basic not in PRIMITIVE_TYPE_NAMES:
             self.add_class_by_name(
                 _type.basic, VisibilityLevel.VISIBLE
             )
