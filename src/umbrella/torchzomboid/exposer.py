@@ -129,7 +129,7 @@ class KahluaExposer:
 
     def expose_visible_to_method(self, method: Method) -> None:
         for parameter in method.parameters:
-            self.expose_referenced_types(parameter)
+            self.expose_referenced_types(parameter.type)
 
         for parameter in method.type_parameters:
             for bound in parameter.bounds:
@@ -156,7 +156,7 @@ class KahluaExposer:
 
             for constructor in torch_class.constructors:
                 for parameter in constructor.parameters:
-                    self.expose_referenced_types(parameter)
+                    self.expose_referenced_types(parameter.type)
 
                 for parameter in constructor.type_parameters:
                     for bound in parameter.bounds:

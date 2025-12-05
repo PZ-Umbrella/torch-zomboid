@@ -142,7 +142,7 @@ def write_globals(classes: Iterable[Class], path: Path, writer: KahluaWriter) ->
 
                 string = writer.write_function(
                     name,
-                    writer.get_parameter_names(method)
+                    method.parameters
                 )
 
                 if not comment.is_empty():
