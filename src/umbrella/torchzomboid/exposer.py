@@ -135,7 +135,7 @@ class KahluaExposer:
             for bound in parameter.bounds:
                 self.expose_referenced_types(bound)
 
-        self.expose_referenced_types(method.returns)
+        self.expose_referenced_types(method.returns.type)
 
     def expose_all_visible(self) -> None:
         for clazz in list(self.classes.values()):
