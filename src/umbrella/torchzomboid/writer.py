@@ -155,9 +155,68 @@ def write_globals(classes: Iterable[Class], path: Path, writer: KahluaWriter) ->
 
 def write_kahlua_file(path: Path) -> None:
     with path.open("w", encoding="utf-8") as file:
-        file.write("---@meta\n\n"
-                   "---@class kahlua.Array<T>\n\n"
-                   "__classmetatables = {}\n")
+        file.write(
+            "---@meta _\n\n"
+            "---@class kahlua.Array<T>\n\n"
+            "__classmetatables = {}\n"
+        )
+
+
+def write_coop_server(path: Path) -> None:
+    with path.open("w", encoding="utf-8") as file:
+        file.write(
+            "---@meta _\n\n"
+            "CoopServer = {}\n\n"
+            "---@param serverName string\n"
+            "---@param userName string\n"
+            "---@param memory number\n"
+            "---@return boolean?\n"
+            "function CoopServer.launch(serverName, userName, memory) end\n\n"
+            "---@param serverName string\n"
+            "---@param userName string\n"
+            "---@param memory number\n"
+            "---@return boolean?\n"
+            "function CoopServer.softreset(serverName, userName, memory) end\n\n"
+            "---@return boolean\n"
+            "function CoopServer.isRunning() end\n\n"
+            "---@param tag string\n"
+            "---@param cookie string\n"
+            "---@param payload string\n"
+            "---@overload fun(tag: string, payload: string)\n"
+            "function CoopServer.sendMessage(tag, cookie, payload) end\n\n"
+            "---@return string\n"
+            "function CoopServer.getAdminPassword() end\n\n"
+            "---@return string\n"
+            "function CoopServer.getTerminationReason() end\n\n"
+            "---@return string?\n"
+            "function CoopServer.getSteamID() end\n\n"
+            "---@return string\n"
+            "function CoopServer.getAddress() end\n\n"
+            "---@return integer\n"
+            "function CoopServer.getPort() end\n\n"
+            "function CoopServer.abort() end\n\n"
+            "---@param serverName string\n"
+            "---@return string\n"
+            "function getServerSaveFolder(serverName) end\n\n"
+            "---@param serverName string\n"
+            "---@return string\n"
+            "function getPlayerSaveFolder(serverName) end\n"
+        )
+
+
+def write_voice_manager(path: Path) -> None:
+    with path.open("w", encoding="utf-8") as file:
+        file.write(
+            "---@meta _\n\n"
+            "VoiceManager = {}\n\n"
+            "---@param username string\n"
+            "function VoiceManager.playerSetMute(username) end\n\n"
+            "---@param username string\n"
+            "---@return boolean\n"
+            "function VoiceManager.playerGetMute(username) end\n\n"
+            "---@return string[]\n"
+            "function VoiceManager.RecordDevices() end\n"
+        )
 
 
 def write_calendar_file(path: Path, torch: Torch) -> None:
@@ -285,6 +344,8 @@ def write_all(torch: Torch, path: Path, exposed_classes: Iterable[Class], expose
         exposer.expose_visible_to_globals(clazz)
 
     write_kahlua_file(path / "__kahlua.lua")
+    write_coop_server(path / "__CoopServer.lua")
+    write_voice_manager(path / "__VoiceManager.lua")
 
     writer = KahluaWriter()
 
