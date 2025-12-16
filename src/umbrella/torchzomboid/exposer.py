@@ -4,7 +4,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 
 from albion.torch import Torch
-from albion.torch.types import Class, TypeReference, Method, PRIMITIVE_TYPE_NAMES
+from albion.torch.types import Class, Method, Type
 from albion.torch.util import OrderedEnum
 
 from umbrella.torchzomboid import KAHLUA_METHOD_ANNOTATION, get_enclosing_classes
@@ -88,11 +88,13 @@ class KahluaExposer:
         else:
             raise ValueError(f"failed to expose unknown class {name}")
 
-    def expose_referenced_types(self, _type: TypeReference) -> None:
-        if _type.is_type_variable:
+    def expose_referenced_types(self, _type: Type) -> None:
+        if Type.is_array(_type):
+            self.expose_referenced_types(_type.component_type)
+        if not Type.is_class(_type):
             return
 
-        if _type.basic not in self.classes and _type.basic not in PRIMITIVE_TYPE_NAMES:
+        if _type.basic not in self.classes:
             self.add_class_by_name(
                 _type.basic, VisibilityLevel.VISIBLE
             )

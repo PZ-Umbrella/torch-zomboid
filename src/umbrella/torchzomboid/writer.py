@@ -4,8 +4,8 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import Final
 
-from albion.torch import Torch, TypeReference
-from albion.torch.types import Class, AccessModifier
+from albion.torch import Torch
+from albion.torch.types import Class, AccessModifier, Type
 from albion.torch.emmylua import LuaComment
 from albion.torch.emmylua.writer import EmmyWriter, RESERVED_TYPE_NAMES
 from albion.torch.emmylua.class_writer import EmmyClassWriter
@@ -48,18 +48,19 @@ def get_class_table_name(clazz: Class) -> str:
 
 
 class KahluaWriter(EmmyWriter):
-    def format_type(self, _type: TypeReference) -> str:
-        basic = _type.basic
+    def format_array(self, component_type: Type, dimensions: int) -> str:
+        name = self.format_type(component_type)
 
-        if basic in KAHLUA_TYPE_MAP:
-            name = KAHLUA_TYPE_MAP[basic]
-        else:
-            name = super().format_type(_type)
-
-        for _ in range(_type.array_dimensions):
+        for _ in range(dimensions):
             name = f"kahlua.Array<{name}>"
 
         return name
+
+    def get_lua_name(self, basic: str) -> str:
+        if basic in KAHLUA_TYPE_MAP:
+            return KAHLUA_TYPE_MAP[basic]
+
+        return super().get_lua_name(basic)
 
 
 class KahluaClassWriter(EmmyClassWriter):
@@ -232,7 +233,7 @@ def write_calendar_file(path: Path, torch: Torch) -> None:
         for field in calendar.fields.values():
             # TODO: should check if final, but we don't store this currently
             if field.static and field.access_modifier is AccessModifier.PUBLIC \
-                    and field.type.basic == "int" and field.type.array_dimensions == 0:
+                    and Type.is_primitive(field.type) and field.type.name == "int":
                 file.write(f"---@type integer\nPZCalendar.{field.name} = nil\n\n")
 
         file.write("Calendar = PZCalendar\n")
