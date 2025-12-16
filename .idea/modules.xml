@@ -2,6 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../../../PycharmProjects/Torch/.idea/Torch.iml" filepath="$PROJECT_DIR$/../../../PycharmProjects/Torch/.idea/Torch.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../forks/kirjava/.idea/kirjava.iml" filepath="$PROJECT_DIR$/../../forks/kirjava/.idea/kirjava.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/torch-zomboid.iml" filepath="$PROJECT_DIR$/.idea/torch-zomboid.iml" />
     </modules>
   </component>

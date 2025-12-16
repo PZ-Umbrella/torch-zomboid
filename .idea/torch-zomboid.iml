@@ -8,5 +8,7 @@
     </content>
     <orderEntry type="jdk" jdkName="uv (torch-zomboid)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="Torch" />
+    <orderEntry type="module" module-name="kirjava" />
   </component>
 </module>

@@ -4,6 +4,5 @@ version = "0.1.0"
 description = "Generates class information for Project Zomboid"
 requires-python = ">=3.12"
 dependencies = [
-    "kirjava-jvm==0.1.8",
     "yamlcore==0.0.4",
 ]
