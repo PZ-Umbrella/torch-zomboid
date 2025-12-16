@@ -48,6 +48,10 @@ def get_class_table_name(clazz: Class) -> str:
 
 
 class KahluaWriter(EmmyWriter):
+    def __init__(self) -> None:
+        super().__init__()
+        self.lua_name_map.update(KAHLUA_TYPE_MAP)
+
     def format_array(self, component_type: Type, dimensions: int) -> str:
         name = self.format_type(component_type)
 
@@ -55,12 +59,6 @@ class KahluaWriter(EmmyWriter):
             name = f"kahlua.Array<{name}>"
 
         return name
-
-    def get_lua_name(self, basic: str) -> str:
-        if basic in KAHLUA_TYPE_MAP:
-            return KAHLUA_TYPE_MAP[basic]
-
-        return super().get_lua_name(basic)
 
 
 class KahluaClassWriter(EmmyClassWriter):
@@ -288,6 +286,10 @@ def build_package_cache(classes: dict[str, KahluaClass], writer: KahluaWriter) -
 
     for clazz in classes.values():
         package_name = clazz.clazz.package()
+
+        if clazz.clazz.name in KAHLUA_TYPE_MAP and clazz.visibility_level is not VisibilityLevel.EXPOSED:
+            # only render lua classes that have exposed statics
+            continue
 
         if package_name not in packages:
             create_package_and_parents(packages, package_name)
