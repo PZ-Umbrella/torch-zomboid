@@ -148,10 +148,13 @@ def main() -> None:
     torch.add_classes_by_name_recurse(exposed.classes | exposed.globals_classes | enclosing_classes)
 
     rosetta_path: Path = args.rosetta
-    if rosetta_path is not None and rosetta_path.is_dir():
-        print("Loading input Rosetta files...")
-        packages = load_dir_recurse(rosetta_path)
-        apply_rosetta(torch, packages)
+    if rosetta_path is not None:
+        if rosetta_path.is_dir():
+            print("Loading input Rosetta files...")
+            packages = load_dir_recurse(rosetta_path)
+            apply_rosetta(torch, packages)
+        else:
+            print("Rosetta path does not exist, skipping loading Rosetta")
 
     match args.language:
         case "emmylua":
