@@ -97,7 +97,7 @@ def main() -> None:
     parser.add_argument(
         "game_path",
         type=Path,
-        help="path to a Project Zomboid installation"
+        help="path to a Project Zomboid installation. On Linux, both the ProjectZomboid and ProjectZomboid/projectzomboid directories are acceptable."
     )
     parser.add_argument(
         "out_path",
@@ -121,6 +121,8 @@ def main() -> None:
     args = parser.parse_args()
 
     game_path: Path = args.game_path
+    if sys.platform == "linux" and game_path.name == "ProjectZomboid":
+        game_path = game_path / "projectzomboid"
     assert game_path.is_dir()
 
     filesystem = FileSystem(get_jdk_paths(game_path, args.jdk) + get_game_classpath(game_path))
