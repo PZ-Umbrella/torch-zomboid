@@ -1,3 +1,4 @@
 temp/*
 .venv/*
 lib/*
+**/__pycache__/*
