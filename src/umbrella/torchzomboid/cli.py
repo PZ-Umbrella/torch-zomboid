@@ -6,7 +6,8 @@ from pathlib import Path
 from argparse import ArgumentParser
 from collections.abc import Iterable
 
-from albion.torch import Torch, Class
+from albion.torch import Torch
+from albion.torch.types import Class
 from albion.torch.filesystem import FileSystem
 from umbrella.torchzomboid import get_enclosing_classes
 from umbrella.torchzomboid.discovery import ExposedClassDiscoverer
@@ -36,42 +37,42 @@ def get_game_classpath(game_path: Path) -> list[Path]:
 
 
 def extract_jdk(jdk_path: Path, out_path: Path) -> None:
-    assert sys.platform == "win32"
-    # TODO: there should also be some way to check that the dump isn't out of date
-    #  but TIS rarely updates the jre version so it should be fine as is
-    if not out_path.is_dir():
-        import subprocess
-        import os
+    if out_path.is_dir():
+        return
+    
+    import subprocess
+    import os
 
-        if "JAVA_HOME" not in os.environ:
-            print(
-                "JDK not detected on your system, cannot dump automatically.\n"
-                "Expect missing class file errors and incomplete output.\n"
-                "Ensure that Java 17 or above is installed.\n"
-                "You can also provide a dump of the JDK created by jimage with the --jdk option."
-            )
-            return
-
-        # TODO: we should probably check if it is java 17 or newer somehow
-
-        print("Dumping JDK, this may take some time...")
-        subprocess.run(
-            [
-                Path(os.environ["JAVA_HOME"], "bin/jimage.exe"),
-                "extract",
-                f"--dir={out_path}", jdk_path
-            ]
+    if "JAVA_HOME" not in os.environ:
+        print(
+            "JDK not detected on your system, cannot dump automatically.\n"
+            "Expect missing class file errors and incomplete output.\n"
+            "Ensure that Java 25 or above is installed.\n"
+            "You can also provide a dump of the JDK created by jimage with the --jdk option."
         )
+        return
+
+    # TODO: we should probably check if it is java 25 or newer somehow
+
+    executable_name = "jimage" if sys.platform != "win32" else "jimage.exe"
+
+    print("Dumping JDK, this may take some time...")
+    subprocess.run(
+        [
+            Path(os.environ["JAVA_HOME"], "bin", executable_name),
+            "extract",
+            f"--dir={out_path}", jdk_path
+        ]
+    )
 
 
 def get_jdk_paths(game_path: Path, jdk_path: Path) -> list[Path]:
     paths: list[Path] = []
 
-    if sys.platform == "win32":
-        extract_jdk(game_path / "jre64/lib/modules", jdk_path)
-    elif not jdk_path.is_dir():
+    extract_jdk(game_path / "jre64/lib/modules", jdk_path)
+    if not jdk_path.is_dir():
         print(
-            "Automatically dumping the JDK is currently only supported on Windows: "
+            "Failed to automatically dump the JDK: "
             "Expect missing class file errors and incomplete output.\n"
             "To prevent this, provide a dump of the JDK created by jimage with the --jdk option."
         )
@@ -113,8 +114,8 @@ def main() -> None:
         "--jdk",
         type=Path,
         help="path to a JDK dumped with jimage.\n"
-             "On Windows, the JDK will be dumped to this path if it does not already exist.\n"
-             "On other operating systems you must dump it yourself to generate type information for the JDK",
+             "The JDK will be dumped to this path if it does not already exist.\n"
+             "If this fails, you can dump it yourself and place it at this path.",
         default=Path("./temp/jdk")
     )
 
@@ -160,7 +161,7 @@ def main() -> None:
             exposed_globals = [torch.get_class(clazz) for clazz in exposed.globals_classes]
             assert None not in exposed_globals
 
-            write_emmylua(torch, args.out_path, exposed_classes, exposed_globals)
+            write_emmylua(torch, args.out_path, exposed_classes, exposed_globals)  # pyright: ignore[reportArgumentType]
         case "luacats":
             write_luacats()
         case "rosetta":
