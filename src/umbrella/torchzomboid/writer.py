@@ -305,12 +305,15 @@ def build_package_cache(classes: dict[str, KahluaClass], writer: KahluaWriter) -
             case VisibilityLevel.INVISIBLE:
                 package.invisible_classes.append(clazz)
 
-        if clazz.name not in RESERVED_TYPE_NAMES:
-            writer.lua_name_map[clazz.clazz.name] = clazz.name
-        else:
-            name = clazz.clazz.name.replace("/", ".").replace("$", ".")
-            assert name not in RESERVED_TYPE_NAMES
-            writer.lua_name_map[clazz.clazz.name] = name
+        # if the class already has a name in the map don't override it
+        #  (mainly so we can override primitives with KAHLUA_TYPE_MAP)
+        if clazz.clazz.name not in writer.lua_name_map:
+            if clazz.name not in RESERVED_TYPE_NAMES:
+                writer.lua_name_map[clazz.clazz.name] = clazz.name
+            else:
+                name = clazz.clazz.name.replace("/", ".").replace("$", ".")
+                assert name not in RESERVED_TYPE_NAMES
+                writer.lua_name_map[clazz.clazz.name] = name
 
         if clazz.has_class_table:
             add_tables_for_enclosing_classes(clazz, classes)
