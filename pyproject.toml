@@ -5,4 +5,21 @@ description = "Generates class information for Project Zomboid"
 requires-python = ">=3.12"
 dependencies = [
     "yamlcore==0.0.4",
+    "albion-torch"
 ]
+
+[tool.uv.sources]
+albion-torch = { path = "lib/torch", editable = true }
+
+[project.scripts]
+main = "umbrella.torchzomboid:uv_main"
+
+[project.gui-scripts]
+edit = "umbrella.torchzomboid:uv_edit"
+
+[build-system]
+requires = ["uv_build>=0.12.7,<0.13"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "umbrella.torchzomboid"
